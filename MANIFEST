@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/DBIx-Result-Convert-JSONSchema.t
+lib/DBIx/Result/Convert/JSONSchema.pm
