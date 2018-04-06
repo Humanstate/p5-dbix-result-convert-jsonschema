@@ -20,19 +20,19 @@ WriteMakefile(
     },
     BUILD_REQUIRES => {
         'Test::Most'          => 0,
-        'DBIx::Class::Schema' => 0
+        'DBIx::Class::Schema' => 0,
         'DBD::Mock'           => '1.45',
         'DBI'                 => '1.641',
     },
     META_MERGE => {
         requires => {
-            perl => '5.010001'
+            perl => '5.010001',
         },
         resources => {
             license    => 'http://dev.perl.org/licenses/',
             homepage   => 'https://metacpan.org/module/DBIx::Result::Convert::JSONSchema',
             bugtracker => 'https://github.com/Humanstate/p5-dbix-result-convert-jsonschema/issues',
-            repository => 'https://github.com/Humanstate/p5-dbix-result-convert-jsonschema'
+            repository => 'https://github.com/Humanstate/p5-dbix-result-convert-jsonschema',
         },
     },
     test => {
