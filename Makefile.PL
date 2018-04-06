@@ -12,18 +12,18 @@ WriteMakefile(
     AUTHOR        => 'Valters Skrupskis <valters.skrupskis@humanstate.com>',
     LICENSE       => 'perl',
     PREREQ_PM     => {
-        'Moo'             => '2.003004',
-        'Types::Standard' => '1.002001',
-        'Carp'            => '1.40',
-        'Module::Load'    => '0.32',
-        'Readonly'        => '2.05',
-        'FindBin'         => '1.51',
+        'Moo'             => 0,
+        'Types::Standard' => 0,
+        'Carp'            => 0,
+        'Module::Load'    => 0,
+        'Readonly'        => 0,
+        'FindBin'         => 0,
     },
     BUILD_REQUIRES => {
         'Test::Most'          => 0,
         'DBIx::Class::Schema' => 0,
-        'DBD::Mock'           => '1.45',
-        'DBI'                 => '1.641',
+        'DBD::Mock'           => 0,
+        'DBI'                 => 0,
     },
     META_MERGE => {
         requires => {
