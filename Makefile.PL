@@ -17,6 +17,7 @@ WriteMakefile(
         'Carp'            => '1.40',
         'Module::Load'    => '0.32',
         'Readonly'        => '2.05',
+        'FindBin'         => '1.51',
     },
     BUILD_REQUIRES => {
         'Test::Most'          => 0,

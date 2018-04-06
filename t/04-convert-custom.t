@@ -5,11 +5,12 @@ use warnings;
 
 use Test::Most;
 
-BEGIN {
-    use_ok('DBIx::Result::Convert::JSONSchema');
-    use_ok('Test::SchemaMock');
-};
+use FindBin qw/ $Bin /;
+use lib "$Bin/lib";
 
+
+use_ok 'DBIx::Result::Convert::JSONSchema';
+use_ok 'Test::SchemaMock';
 
 my $schema_mock = Test::SchemaMock->new();
 my $schema      = $schema_mock->schema;

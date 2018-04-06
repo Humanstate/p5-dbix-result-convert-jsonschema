@@ -5,12 +5,13 @@ use warnings;
 
 use Test::Most;
 
-BEGIN {
-    use_ok('DBIx::Result::Convert::JSONSchema::Type::MySQL');
-    use_ok('DBIx::Result::Convert::JSONSchema');
-    use_ok('Test::SchemaMock');
-};
+use FindBin qw/ $Bin /;
+use lib "$Bin/lib";
 
+
+use_ok 'DBIx::Result::Convert::JSONSchema::Type::MySQL';
+use_ok 'DBIx::Result::Convert::JSONSchema';
+use_ok 'Test::SchemaMock';
 
 my $TYPE_MAP    = DBIx::Result::Convert::JSONSchema::Type::MySQL->get_type_map();
 
