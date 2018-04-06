@@ -1,21 +1,30 @@
 package DBIx::Result::Convert::JSONSchema::Type::MySQL;
 
+=head1 NAME
+
+    DBIx::Result::Convert::JSONSchema::Type::MySQL - Mapping of MySQL field type to JSON property type
+
+=head1 VERSION
+
+    0.01
+
+=head1 SYNOPSIS
+
+    use DBIx::Result::Convert::JSONSchema::Type::MySQL;
+    my $type_map = DBIx::Result::Convert::JSONSchema::Type::MySQL->get_type_map;
+
+=head1 DESCRIPTION
+
+This module defines mapping between DBIx MySQL field types to JSON schema property types.
+
+=cut
+
 use strict;
 use warnings;
 
 our $VERSION = '0.01';
 
 use Readonly;
-
-
-=head1 SYNOPSUS
-
-Defines mapping between DBIx result field types and JSON schema field types
-
-    use DBIx::Result::Convert::JSONSchema::Type::MySQL;
-    my $type_map = DBIx::Result::Convert::JSONSchema::Type::MySQL->get_type_map;
-
-=cut
 
 
 Readonly my %TYPE_MAP => (
@@ -31,10 +40,10 @@ Readonly my %TYPE_MAP => (
 
 =head2 C<get_type_map>
 
-Return mapping of DBIx::Class:Result field name => JSON Schema field name
+Return mapping of DBIx::Class:Result field name => JSON Schema field name.
 
     # { decimal => 'number', time => 'string', ... }
-    my $map = DBIx::Result::Convert::Type::MySQL::get_type_map();
+    my $map = DBIx::Result::Convert::Type::MySQL->get_type_map;
 
 =cut
 
@@ -50,5 +59,19 @@ sub get_type_map {
 
     return $mapped_fields;
 }
+
+=head1 AUTHOR
+
+Valters Skrupskis - C<valters.skrupskis@humanstate.com>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation
+or file a bug report then please raise an issue / pull request:
+
+    https://github.com/Humanstate/p5-dbix-result-convert-jsonschema
+
+=cut
 
 1;

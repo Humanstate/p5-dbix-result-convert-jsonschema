@@ -7,23 +7,25 @@ use Test::Most;
 
 BEGIN {
     use_ok('DBIx::Result::Convert::JSONSchema');
+    use_ok('Test::SchemaMock');
 };
-
 
 throws_ok {
     DBIx::Result::Convert::JSONSchema->new();
-} qr/missing required argument schema/;
+} qr/Missing required arguments: schema/;
 
 throws_ok {
     DBIx::Result::Convert::JSONSchema->new( schema => 1 );
-} qr/missing required argument schema_source/;
+} qr/Value "1" did not pass type constraint/;
+
+my $schema_mock = Test::SchemaMock->new();
 
 throws_ok {
-    DBIx::Result::Convert::JSONSchema->new( schema => 1, schema_source => 'Dog' );
-} qr/given schema_source 'Dog' is not valid/;
+    DBIx::Result::Convert::JSONSchema->new( schema_source => 'Rat', schema => $schema_mock->schema );
+} qr/Value "Rat" did not pass type constraint/;
 
 isa_ok
-    my $converter = DBIx::Result::Convert::JSONSchema->new( schema => 1, schema_source => 'MySQL' ),
+    my $converter = DBIx::Result::Convert::JSONSchema->new( schema => $schema_mock->schema ),
     'DBIx::Result::Convert::JSONSchema';
 
 done_testing;

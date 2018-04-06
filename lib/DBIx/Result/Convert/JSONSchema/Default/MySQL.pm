@@ -1,5 +1,24 @@
 package DBIx::Result::Convert::JSONSchema::Default::MySQL;
 
+=head1 NAME
+
+    DBIx::Result::Convert::JSONSchema::Default::MySQL - Mapping of MySQL field type lengths
+
+=head1 VERSION
+
+    0.01
+
+=head1 SYNOPSIS
+
+    use DBIx::Result::Convert::JSONSchema::Default::MySQL;
+    my $lenght_map = DBIx::Result::Convert::JSONSchema::Default::MySQL->get_length_map;
+
+=head1 DESCRIPTION
+
+This module defines default field lengths of MySQL database field types.
+
+=cut
+
 use strict;
 use warnings;
 
@@ -7,23 +26,6 @@ our $VERSION = '0.01';
 
 use Readonly;
 
-
-=head1 SYNOPSIS
-
-Defines length types and default field maximum/minimum values based on database field type
-
-    use DBIx::Result::Convert::JSONSchema::Default::MySQL;
-    my $length_map = DBIx::Result::Convert::JSONSchema::Default::MySQL->get_length_map;
-    my $length_type_map = DBIx::Result::Convert::JSONSchema::Default::MySQL->get_length_type_map;
-
-=cut
-
-
-Readonly my %LENGTH_TYPE_MAP => (
-    string  => [ qw/ minLength maxLength / ],
-    number  => [ qw/ minimum maximum / ],
-    integer => [ qw/ minimum maximum / ],
-);
 
 Readonly my %LENGTH_MAP => (
     char       => [ 0, 1 ],
@@ -65,7 +67,28 @@ Readonly my %LENGTH_MAP => (
     },
 );
 
-sub get_length_map      { \%LENGTH_MAP }
-sub get_length_type_map { \%LENGTH_TYPE_MAP }
+=item C<get_length_map>
+
+Static method on class that returns field length mapping.
+
+    my $lenght_map = DBIx::Result::Convert::JSONSchema::Default::MySQL->get_length_map;
+
+=cut
+
+sub get_length_map { \%LENGTH_MAP }
+
+=head1 AUTHOR
+
+Valters Skrupskis - C<valters.skrupskis@humanstate.com>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation
+or file a bug report then please raise an issue / pull request:
+
+    https://github.com/Humanstate/p5-dbix-result-convert-jsonschema
+
+=cut
 
 1;

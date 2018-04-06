@@ -1,233 +1,115 @@
 package DBIx::Result::Convert::JSONSchema;
 
-use strict;
-use warnings;
+=head1 NAME
+    DBIx::Result::Convert::JSONSchema - Convert DBIx result schema to JSON schema
 
-our $VERSION = '0.01';
+=for html
 
-use Carp;
-use Module::Load qw/ load /;
-use Readonly;
+    <a href='https://travis-ci.org/Humanstate/p5-dbix-result-convert-jsonschema?branch=master'><img src='https://travis-ci.org/Humanstate/p5-dbix-result-convert-jsonschema.svg?branch=master' alt='Build Status' /></a>
+    <a href='https://coveralls.io/github/Humanstate/p5-dbix-result-convert-jsonschema?branch=master'><img src='https://coveralls.io/repos/github/Humanstate/p5-dbix-result-convert-jsonschema/badge.svg?branch=master' alt='Coverage Status' /></a>
 
+=head1 VERSION
+
+    0.01
 
 =head1 SYNOPSIS
 
-Convert DBIx::Class:Result::X schema to JSON schema.
-NOTE: Conversion does not include relationships between the tables. It simply
-takes DBIx Result class and tries it's best to produce JSON schema equivalent.
-
     use DBIx::Result::Convert::JSONSchema;
 
-    my $converter = DBIx::Result::Convert::JSONSchema->new(
-        schema        => DBIx::Class::Schema,  # required
-        schema_source => 'MySQL',              # required
+    my $SchemaConvert = DBIx::Result::Convert::JSONSchema->new(
+        schema => _DBIx::Class::Schema_
     );
+    my $json_schema = $SchemaConvert->get_json_schema( _DBIx::Class::ResultSource_ );
 
-    my $json_schema = $converter->get_json_schema('MySchemaResult');
-    ...
+=head1 DESCRIPTION
+
+This module attempts basic conversion of L<DBIx::Class::ResultSource> to equivalent
+of L<http://json-schema.org/>.
+By default the conversion assumes that the L<DBIx::Class::ResultSource> originated
+from MySQL database. Thus all the types and defaults are set based on MySQL
+field definitions.
+It is, however, possible to overwrite field type map and length map to support
+L<DBIx::Class::ResultSource> from other database solutions.
+
+Note, relations between tables are not taken in account!
 
 =cut
 
+use Moo;
+use Types::Standard qw/ :all /;
 
-Readonly my %ALLOWED_SCHEMA_SOURCE => map { $_ => 1 } qw/ MySQL /;
-Readonly my %PATTERN_MAP           => (
-    date      => '^\d{4}-\d{2}-\d{2}$',
-    time      => '^\d{2}:\d{2}:\d{2}$',
-    year      => '^\d{4}$',
-    datetime  => '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$',
-    timestamp => '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$',
+use Carp;
+use Module::Load qw/ load /;
+
+our $VERSION = '0.01';
+
+
+has schema => (
+    is       => 'ro',
+    isa      => InstanceOf['DBIx::Class::Schema'],
+    required => 1,
 );
 
-=head2 C<new>
+has schema_source => (
+    is      => 'lazy',
+    isa     => Enum[ qw/ MySQL / ],
+    default => 'MySQL',
+);
 
-Constructs a new instance of DBIx::Result::Convert::JSONSchema and returns it.
-Additional arguments can be provided to overwrite initial state of field conversion types.
+has length_type_map => (
+    is      => 'rw',
+    isa     => HashRef,
+    default => sub {
+        return {
+            string  => [ qw/ minLength maxLength / ],
+            number  => [ qw/ minimum maximum / ],
+            integer => [ qw/ minimum maximum / ],
+        };
+    },
+);
 
-    my $converter = DBIx::Result::Convert::JSONSchema->new(
-        schema          => DBIx::Class::Schema,                               # required
-        schema_source   => 'MySQL',                                           # required
-        type_map        => { integer => [ qw/ integer / ], ... },             # optional
-        length_map      => { char    => [ 0, 1 ], ... },                      # optional
-        length_type_map => { string  => [ qw/ minLength maxLength / ], ... }, # optional
-        pattern_map     => { date    => '^\d{4}-\d{2}-\d{2}$' },              # optional
-    );
+has type_map => (
+    is      => 'rw',
+    isa     => HashRef,
+    default => sub {
+        my ( $self ) = @_;
 
-    ARGS:
-        Required:
-            schema:
-                Instance of DBIx::Class::Schema
-            schema_source:
-                One of database sources from which the result sets were generated e.g. 'MySQL'
-        Optional:
-            type_map:
-                Mapping between DBIx data_type field and JSON schema data type (see L<DBIx::Result::Convert::JSONSchema::Type::MySQL>)
-            length_map:
-                Min/max value definition of DBIx result fields (see L<DBIx::Result::Convert::JSONSchema::Default::MySQL>)
-            length_type_map:
-                Min/max DBIx field type to JSON schema field type limit key (see L<DBIx::Result::Convert::JSONSchema::Default::MySQL>)
-            pattern_map:
-                JSON schema patterns based on DBIx result field type (see C<%PATTERN_MAP>)
+        my $type_class = __PACKAGE__ . '::Type::' . $self->schema_source;
+        load $type_class;
 
-=cut
+        return $type_class->get_type_map;
+    },
+);
 
-sub new {
-    my ( $class, %args ) = @_;
+has length_map => (
+    is      => 'rw',
+    isa     => HashRef,
+    default => sub {
+        my ( $self ) = @_;
 
-    croak 'missing required argument schema'        unless $args{schema};
-    croak 'missing required argument schema_source' unless $args{schema_source};
+        my $defaults_class = __PACKAGE__ . '::Default::' . $self->schema_source;
+        load $defaults_class;
 
-    croak sprintf(
-        q{given schema_source '%s' is not valid, allowed types - %s},
-        $args{schema_source}, join ', ', keys %ALLOWED_SCHEMA_SOURCE
-    )
-        unless $ALLOWED_SCHEMA_SOURCE{ $args{schema_source} };
+        return $defaults_class->get_length_map;
+    },
+);
 
-    my $type_class     = $class . '::Type::'    . $args{schema_source};
-    my $defaults_class = $class . '::Default::' . $args{schema_source};
-
-    load $type_class;
-    load $defaults_class;
-
-    $args{type_map} = {
-        %{ $type_class->get_type_map() },
-        %{ $args{type_map} || {} },
-    };
-    $args{length_map} = {
-        %{ $defaults_class->get_length_map() },
-        %{ $args{length_map} || {} },
-    };
-    $args{length_type_map} = {
-        %{ $defaults_class->get_length_type_map() },
-        %{ $args{length_type_map} || {} },
-    };
-    $args{pattern_map} = {
-        %PATTERN_MAP,
-        %{ $args{pattern_map} || {} }
-    };
-
-    my $self = \%args;
-    bless $self, $class;
-
-    return $self;
-}
-
-=head2 C<schema_source>
-
-Return or set the schema source from which the defaults were loaded.
-
-    my $schema_source = $self->schema_source('MySQL');
-    my $schema_source = $self->schema_source; # 'MySQL'
-
-=cut
-
-sub schema_source {
-    my ( $self, $schema_source ) = @_;
-
-    if ( $schema_source ) {
-        $self->{schema_source} = $schema_source;
+has pattern_map => (
+    is      => 'rw',
+    isa     => HashRef,
+    lazy    => 1,
+    default  => sub {
+        my ( $self ) = @_;
+        return {
+            date      => '^\d{4}-\d{2}-\d{2}$',
+            time      => '^\d{2}:\d{2}:\d{2}$',
+            year      => '^\d{4}$',
+            datetime  => '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$',
+            timestamp => '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$',
+        };
     }
+);
 
-    return $self->{schema_source}
-}
-
-=head2 C<schema>
-
-Return or set instance of DBIx::Class::Schema.
-
-    my $schema = $self->schema(DBIx::Class::Schema);
-    my $schema = $self->schema; # Instance of DBIx::Class::Schema
-
-=cut
-
-sub schema {
-    my ( $self, $schema ) = @_;
-
-    if ( $schema ) {
-        $self->{schema} = $schema;
-    }
-
-    return $self->{schema}
-}
-
-=head2 C<type_map>
-
-Return or set type map of DBIx types to JSON schema types.
-See L<DBIx::Result::Convert::JSONSchema::Type::MySQL>
-
-    my $type_map = $self->type_map({ integer => [ qw/ integer / ], ... });
-    my $type_map = $self->type_map; # { integer => [ qw/ integer / ], ... }
-
-=cut
-
-sub type_map {
-    my ( $self, $type_map ) = @_;
-
-    if ( $type_map ) {
-        $self->{type_map} = $type_map;
-    }
-
-    return $self->{type_map};
-}
-
-=head2 C<length_type_map>
-
-Return or set type length map between DBIx types and JSON types.
-See L<DBIx::Result::Convert::JSONSchema::Default::MySQL>
-
-    my $length_type_map = $self->length_type_map({ string => [ qw/ minLength maxLength / ], ... });
-    my $length_type_map = $self->length_type_map; # { string => [ qw/ minLength maxLength / ], ... }
-
-=cut
-
-sub length_type_map {
-    my ( $self, $length_type_map ) = @_;
-
-    if ( $length_type_map ) {
-        $self->{length_type_map} = $length_type_map;
-    }
-
-    return $self->{length_type_map};
-}
-
-=head2 C<length_map>
-
-Return or set length map which defines min/max values for schema fields.
-See L<DBIx::Result::Convert::JSONSchema::Default::MySQL>
-
-    my $length_map = $self->length_map({ char => [ 0, 1 ], ... });
-    my $length_map = $self->length_map; # { char => [ 0, 1 ], ... }
-
-=cut
-
-sub length_map {
-    my ( $self, $length_map ) = @_;
-
-    if ( $length_map ) {
-        $self->{length_map} = $length_map;
-    }
-
-    return $self->{length_map};
-}
-
-=head2 C<pattern_map>
-
-Return or set JSON schema patterns based on DBIx field types.
-See C<%PATTERN_MAP>
-
-    my $pattern_map = $self->pattern_map({ date => '^\d{4}-\d{2}-\d{2}$', ... });
-    my $pattern_map = $self->pattern_map; # { date => '^\d{4}-\d{2}-\d{2}$', ... }
-
-=cut
-
-sub pattern_map {
-    my ( $self, $pattern_map ) = @_;
-
-    if ( $pattern_map ) {
-        $self->{pattern_map} = $pattern_map;
-    }
-
-    return $self->{pattern_map};
-}
 
 =head2 C<get_json_schema>
 
@@ -455,4 +337,22 @@ sub _get_json_schema_property_min_max_value {
         : $self->length_map->{ $column_info->{data_type} }->{signed}->[ $range ];
 }
 
-1;
+=head1 SEE ALSO
+
+L<DBIx::Class::ResultSource> - Result source object
+
+=head1 AUTHOR
+
+Valters Skrupskis - C<valters.skrupskis@humanstate.com>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation
+or file a bug report then please raise an issue / pull request:
+
+    https://github.com/Humanstate/p5-dbix-result-convert-jsonschema
+
+=cut
+
+__PACKAGE__->meta->make_immutable;

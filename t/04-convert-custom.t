@@ -18,21 +18,32 @@ isa_ok
     my $converter = DBIx::Result::Convert::JSONSchema->new(
         schema        => $schema,
         schema_source => 'MySQL',
-        type_map      => {
-            json => 'cat'
-        },
-        length_map => {
-            char => [ 666, 999 ],
-        },
-        length_type_map => {
-            integer => [ qw/ X Y / ],
-        },
-        pattern_map => {
-            date => 'overwritten pattern',
-            json => 'XYZ',
-        },
     ),
     'DBIx::Result::Convert::JSONSchema';
+
+my $type_map = { json => 'cat' };
+$converter->type_map({
+    %{ $converter->type_map },
+    %{ $type_map },
+});
+
+my $length_map = { char => [ 666, 999 ] };
+$converter->length_map({
+    %{ $converter->length_map },
+    %{ $length_map },
+});
+
+my $length_type_map = { integer => [ qw/ X Y / ] };
+$converter->length_type_map({
+    %{ $converter->length_type_map },
+    %{ $length_type_map },
+});
+
+my $pattern_map = { date => 'overwritten pattern', json => 'XYZ' };
+$converter->pattern_map({
+    %{ $converter->pattern_map },
+    %{ $pattern_map },
+});
 
 my $json_schema = $converter->get_json_schema('MySQLTypeTest');
 

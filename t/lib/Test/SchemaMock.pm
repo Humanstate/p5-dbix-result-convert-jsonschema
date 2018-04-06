@@ -1,51 +1,41 @@
 package Test::SchemaMock;
+use Moo;
 
-use strict;
-use warnings;
-
+use Carp;
 use DBD::Mock;
 use DBI;
+use Types::Standard qw/ :all /;
+
 use Test::Schema;
 
 
-sub new {
-    my ( $class, %args ) = @_;
+has mock_data => (
+    is => 'lazy',
+    isa => HashRef,
+);
 
-    my $self = \%args;
-    bless $self, $class;
+has schema => (
+    is      => 'lazy',
+    isa     => InstanceOf['DBIx::Class::Schema'],
+    default => sub {
+        my ( $self ) = @_;
+        return Test::Schema->connect( sub { $self->dbh } );
+    },
+);
 
-    return $self;
-}
-
-sub schema {
-    my ( $self, $schema ) = @_;
-
-    if ( $schema ) {
-        $self->{schema} = $schema;
-    }
-    elsif ( ! $self->{schema} ) {
-        $self->{schema} = Test::Schema->connect( sub { $self->dbh } );
-    }
-
-    return $self->{schema};
-}
-
-sub dbh {
-    my ( $self, $dbh ) = @_;
-
-    if ( $dbh ) {
-        $self->{dbh} = $dbh;
-    }
-    elsif ( ! $self->{dbh} ) {
+has dbh => (
+    is      => 'lazy',
+    isa     => InstanceOf['DBI'],
+    default => sub {
         my $dbh = DBI->connect( 'DBI:Mock:', '', '' )
-            or die "Cannot create handle: $DBI::errstr\n";
-        $self->{dbh} = $dbh;
-    }
+            or croak "Cannot create handle: $DBI::errstr\n";
+        return $dbh;
+    },
+);
 
-    return $self->{dbh};
-}
+sub _build_mock_data {
+    my ( $self ) = @_;
 
-sub mock_data {
     return {
         timestamp => {
             minLength => 26,
@@ -191,4 +181,4 @@ sub mock_data {
     };
 }
 
-1;
+__PACKAGE__->meta->make_immutable;
