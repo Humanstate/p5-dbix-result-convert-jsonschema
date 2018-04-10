@@ -32,12 +32,19 @@ my $json_schema = $converter->get_json_schema('MySQLTypeTest', {
     },
     overwrite_schema_properties     => {
         enum => {
+            _action => 'merge',
             type    => 'dog',
             new_key => 'value',
+        },
+        blob => {
+            _action => 'overwrite',
+            new_prop_1 => 1,
+            new_prop_2 => 2,
         },
     },
     exclude_required                => [ qw/ tinytext / ],
     exclude_properties              => [ qw/ binary / ],
+    include_required                => [ qw/ year time / ],
 });
 
 is $json_schema->{properties}->{decimal}->{type}, 'string', 'decimal converted to string type';
@@ -57,8 +64,26 @@ ok exists $json_schema->{properties}->{another}, 'another key exists in JSON sch
 is $json_schema->{properties}->{enum}->{type}, 'dog', 'enum now has type of dog';
 ok $json_schema->{properties}->{enum}->{new_key}, 'enum contains new key';
 
-is scalar @{ $json_schema->{required} }, 0, 'no required properties';
+is scalar @{ $json_schema->{required} }, 2, 'contains 2 required properties';
+cmp_bag $json_schema->{required}, [ qw/ year time / ], 'got two expected required schema properties';
 
 ok ! exists $json_schema->{properties}->{binary}, 'binary key got removed from JSON schema';
+
+subtest 'different result for merge or overwrite property _action' => sub {
+
+    # for 'enum' expecting keys to be merged
+    is_deeply $json_schema->{properties}->{enum}, {
+        type    => 'dog',
+        new_key => 'value',
+        enum    => [ qw/ X Y Z / ],
+    }, 'got enum item with merged properties';
+
+    # for 'blob' expecting all keys to be overwritten
+    is_deeply $json_schema->{properties}->{blob}, {
+        new_prop_1 => 1,
+        new_prop_2 => 2,
+    }, 'got blob item with all properties overwritten';
+
+};
 
 done_testing;

@@ -125,9 +125,10 @@ Returns somewhat equivalent JSON schema based on DBIx result source name.
         },
         overwrite_schema_properties     => {
             name => {
-                minimum => 10,
-                maximum => 20,
-                type    => 'number',
+                _action  => 'merge', # one of - merge/overwrite
+                minimum  => 10,
+                maximum  => 20,
+                type     => 'number',
             },
         },
         exclude_required   => [ qw/ name address / ],
@@ -155,7 +156,9 @@ Returns somewhat equivalent JSON schema based on DBIx result source name.
                 HashRef of { PROPERTY_NAME => { ... JSON SCHEMA ATTRIBUTES ... } } which will replace default generated
                 schema properties.
             exclude_required:
-                ArrayRef of database column names which should always be excluded from required schema properties
+                ArrayRef of database column names which should always be EXCLUDED from required schema properties
+            include_required:
+                ArrayRef of database column names which should always be INCLUDED in required schema properties
             exclude_properties:
                 ArrayRef of database column names which should be excluded from JSON schema
 
@@ -174,6 +177,7 @@ sub get_json_schema {
     my $overwrite_schema_property_keys  = delete $args->{overwrite_schema_property_keys} // {};
     my $overwrite_schema_properties     = delete $args->{overwrite_schema_properties}    // {};
     my %exclude_required                = map { $_ => 1 } @{ delete $args->{exclude_required}   || [] };
+    my %include_required                = map { $_ => 1 } @{ delete $args->{include_required}   || [] };
     my %exclude_properties              = map { $_ => 1 } @{ delete $args->{exclude_properties} || [] };
 
     my %json_schema = (
@@ -206,8 +210,13 @@ sub get_json_schema {
         }
 
         # DBIx schema required -> JSON schema required
-        if ( ! $source_info->{ $column }->{default_value} && ! $source_info->{ $column }->{is_nullable} && ! $exclude_required{ $column } ) {
-            push @{ $json_schema{required} }, $column;
+        if ( $include_required{ $column } ) {
+            my $required_property = $overwrite_schema_property_keys->{ $column } // $column;
+            push @{ $json_schema{required} }, $required_property;
+        }
+        elsif ( ! $source_info->{ $column }->{default_value} && ! $source_info->{ $column }->{is_nullable} && ! $exclude_required{ $column } ) {
+            my $required_property = $overwrite_schema_property_keys->{ $column } // $column;
+            push @{ $json_schema{required} }, $required_property;
         }
 
         # DBIx schema defaults -> JSON schema defaults (no refs e.g. current_timestamp)
@@ -235,15 +244,20 @@ sub get_json_schema {
 
         # JSON schema property description
         if ( ! $json_schema{properties}->{ $column }->{description} && $has_schema_property_description ) {
-            my $property_description = $self->_get_json_schema_property_description( $column, $json_schema{properties}->{ $column } );
+            my $property_description = $self->_get_json_schema_property_description(
+                $overwrite_schema_property_keys->{ $column } // $column,
+                $json_schema{properties}->{ $column }
+            );
             $json_schema{properties}->{ $column }->{description} = $property_description;
         }
 
         # Overwrites: merge JSON schema property key values with custom ones
-        if ( my $merge_property = delete $overwrite_schema_properties->{ $column } ) {
+        if ( my $overwrite_property = delete $overwrite_schema_properties->{ $column } ) {
+            my $action = delete $overwrite_property->{_action} // 'merge';
+
             $json_schema{properties}->{ $column } = {
-                %{ $json_schema{properties}->{ $column } },
-                %{ $merge_property },
+                %{ $action eq 'merge' ? $json_schema{properties}->{ $column } : {} },
+                %{ $overwrite_property }
             };
         }
 
