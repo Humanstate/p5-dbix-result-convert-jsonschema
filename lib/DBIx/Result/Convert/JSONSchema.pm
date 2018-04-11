@@ -40,6 +40,7 @@ use Types::Standard qw/ :all /;
 
 use Carp;
 use Module::Load qw/ load /;
+use Storable qw/ dclone /;
 
 our $VERSION = '0.01';
 
@@ -166,7 +167,7 @@ Returns somewhat equivalent JSON schema based on DBIx result source name.
 
 sub get_json_schema {
     my ( $self, $source, $args ) = @_;
-    $args //= {};
+    $args = dclone( $args // {} );
 
     croak 'missing schema source' unless $source;
 
