@@ -67,7 +67,7 @@ Readonly my %LENGTH_MAP => (
     },
 );
 
-=item C<get_length_map>
+=head2 C<get_length_map>
 
 Static method on class that returns field length mapping.
 
