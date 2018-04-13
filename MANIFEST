@@ -13,4 +13,4 @@ t/04-convert-custom.t
 t/05-convert-options.t
 t/lib/Test/Schema.pm
 t/lib/Test/SchemaMock.pm
-t/lib/Test/Schema/Result//MySQLTypeTest.pm
+t/lib/Test/Schema/Result/MySQLTypeTest.pm

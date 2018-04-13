@@ -2,3 +2,10 @@
 *.swp
 *.swo
 *.bak
+/blib/
+/pm_to_blib
+/Makefile
+MYMETA.yml
+MYMETA.json
+Makefile.old
+*.gz
