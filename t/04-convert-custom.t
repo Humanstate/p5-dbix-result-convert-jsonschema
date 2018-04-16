@@ -56,7 +56,7 @@ foreach my $schema_key ( keys %{ $json_schema->{properties} } ) {
     }
 }
 
-is $json_schema->{properties}->{json}->{type}, 'cat', 'got overwritten json default type';
+cmp_bag $json_schema->{properties}->{json}->{type}, [ qw/ cat null / ], 'got overwritten json default type';
 is $json_schema->{properties}->{char}->{minLength}, 666, 'got overwritten char min length';
 is $json_schema->{properties}->{date}->{pattern}, 'overwritten pattern', 'got overwritten date pattern';
 is $json_schema->{properties}->{json}->{pattern}, 'XYZ', 'got new pattern for json type';

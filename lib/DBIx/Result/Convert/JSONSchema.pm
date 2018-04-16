@@ -230,6 +230,17 @@ sub get_json_schema {
             $json_schema{properties}->{ $column }->{enum} = $column_info->{extra}->{list};
         }
 
+        # Consider 'is nullable' to accept 'null' values in all cases
+        if ( $source_info->{ $column }->{is_nullable} ) {
+            if ( $json_type eq 'enum' ) {
+                $json_schema{properties}->{ $column }->{enum} //= [];
+                push @{ $json_schema{properties}->{ $column }->{enum} }, 'null';
+            }
+            else {
+                $json_schema{properties}->{ $column }->{type} = [ $json_type, 'null' ];
+            }
+        }
+
         # DBIx decimal numbers -> JSON schema numeric string pattern
         if ( $json_type eq 'number' && $decimals_to_pattern ) {
             if ( $column_info->{size} && ref $column_info->{size} eq 'ARRAY' ) {
@@ -300,17 +311,33 @@ sub _get_json_schema_property_description {
 
     return '' if $property->{type} eq 'object'; # no idea how to handle
 
-    my $is_numeric = $property->{type} =~ /^integer|number$/;
+    my %types;
+    if ( ref $property->{type} eq 'ARRAY' ) {
+        %types = map { $_ => 1 } @{ $property->{type} };
+    }
+    else {
+        $types{ $property->{type} } = 1;
+    }
 
-    my $description = $is_numeric ? 'Numeric' : ucfirst $property->{type};
+    my $description = '';
+    $description   .= 'Optional' if $types{null};
+
+    my $type_part;
+    if ( grep { /^integer|number$/ } keys %types ) {
+        $type_part = 'numeric';
+    }
+    else {
+        ( $type_part ) = grep { $_ ne 'null' } keys %types; # lucky roll, last type that isn't 'null' should be legit
+    }
+
+    $description .= $description ? " $type_part" : ucfirst $type_part;
     $description .= sprintf ' type value for field %s', $column;
 
-    # non-decimal numeric type
-    if ( $property->{type} eq 'integer' && $property->{maximum} ) {
-        my $integer_example = $property->{default} || int rand $property->{maximum};
-        $description .= ' e.g. ' . $integer_example;
+    if ( ( grep { /^integer$/ } keys %types ) && $property->{maximum} ) {
+        my $integer_example = $property->{default} // int rand $property->{maximum};
+        $description       .= ' e.g. ' . $integer_example;
     }
-    elsif ( $property->{type} eq 'string' && $property->{pattern} ) {
+    elsif ( ( grep { /^string$/ } keys %types ) && $property->{pattern} ) {
         $description .= sprintf ' with pattern %s ', $property->{pattern};
     }
 

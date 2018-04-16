@@ -75,7 +75,7 @@ subtest 'different result for merge or overwrite property _action' => sub {
     is_deeply $json_schema->{properties}->{enum}, {
         type    => 'dog',
         new_key => 'value',
-        enum    => [ qw/ X Y Z / ],
+        enum    => [ qw/ X Y Z null / ],
     }, 'got enum item with merged properties';
 
     # for 'blob' expecting all keys to be overwritten
