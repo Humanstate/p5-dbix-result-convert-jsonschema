@@ -54,8 +54,11 @@ subtest 'MySQL DBIx data type to JSON data type' => sub {
         my $dbix_field_data_type  = $column_info->{ $schema_definition_key }->{data_type};
         my $json_schema_data_type = $json_schema->{properties}->{ $schema_definition_key }->{type};
 
-        is $json_schema_data_type, $TYPE_MAP->{ $dbix_field_data_type },
-            "key $schema_definition_key with DBIx type '$dbix_field_data_type' converted to JSON schema type '$json_schema_data_type'";
+        # might contain 'null' if the field is nullable
+        my %types = ref $json_schema_data_type eq 'ARRAY' ? map { $_ => 1 } @{ $json_schema_data_type } : ( $json_schema_data_type => 1 );
+
+        ok $types{ $TYPE_MAP->{ $dbix_field_data_type } },
+            sprintf "key '$schema_definition_key' with DBIx type '$dbix_field_data_type' converted to JSON schema type";
     }
 
 };
@@ -94,8 +97,13 @@ subtest 'integer types have default minimum and maximum' => sub {
 
     foreach my $json_schema_key ( keys %{ $json_schema->{properties} } ) {
         my $json_schema_type = $json_schema->{properties}->{ $json_schema_key }->{type};
+        next unless $json_schema_type;
 
-        if ( $json_schema_type && $json_schema_type eq 'integer' ) {
+        my %type_map = ref $json_schema_type eq 'ARRAY' ? map {
+            $_ => 1
+        } @{ $json_schema_type } : ( $json_schema_type => 1 );
+
+        if ( $type_map{integer} ) {
             ok defined $json_schema->{properties}->{ $json_schema_key }->{minimum},
                 "JSON schema property $json_schema_key has minimum for integer type";
             ok defined $json_schema->{properties}->{ $json_schema_key }->{maximum},
