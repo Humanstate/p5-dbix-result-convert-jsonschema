@@ -233,7 +233,7 @@ sub get_json_schema {
         # Consider 'is nullable' to accept 'null' values in all cases
         if ( $source_info->{ $column }->{is_nullable} ) {
             if ( $json_type eq 'enum' ) {
-                $json_schema{properties}->{ $column }->{enum} = [] if ! $json_schema{properties}->{ $column }->{enum};
+                $json_schema{properties}->{ $column }->{enum} //= [];
                 push @{ $json_schema{properties}->{ $column }->{enum} }, 'null';
             }
             else {

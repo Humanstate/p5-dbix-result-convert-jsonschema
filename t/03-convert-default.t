@@ -113,4 +113,5 @@ subtest 'integer types have default minimum and maximum' => sub {
     }
 
 };
+
 done_testing;
