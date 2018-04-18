@@ -62,7 +62,7 @@ sub get_type_map {
 
 =head1 AUTHOR
 
-Valters Skrupskis - C<valters.skrupskis@humanstate.com>
+malishew - C<malishew@cpan.org>
 
 =head1 LICENSE
 

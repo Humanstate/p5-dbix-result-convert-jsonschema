@@ -79,7 +79,7 @@ sub get_length_map { \%LENGTH_MAP }
 
 =head1 AUTHOR
 
-Valters Skrupskis - C<valters.skrupskis@humanstate.com>
+malishew - C<malishew@cpan.org>
 
 =head1 LICENSE
 

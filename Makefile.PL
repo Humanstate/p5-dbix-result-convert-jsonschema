@@ -7,9 +7,9 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME          => 'DBIx::Result::Convert::JSONSchema',
-    ABSTRACT_FROM => 'lib/DBIx/Result/Convert/JSONSchema.pm',
+    ABSTRACT      => 'lib/DBIx/Result/Convert/JSONSchema.pm',
     VERSION_FROM  => 'lib/DBIx/Result/Convert/JSONSchema.pm',
-    AUTHOR        => 'Valters Skrupskis <valters.skrupskis@humanstate.com>',
+    AUTHOR        => 'malishew <malishew@cpan.org>',
     LICENSE       => 'perl',
     PREREQ_PM     => {
         'Moo'             => 0,

@@ -90,7 +90,7 @@ Returns somewhat equivalent JSON schema based on DBIx result source name.
 
 # AUTHOR
 
-Valters Skrupskis - `valters.skrupskis@humanstate.com`
+malishew - `malishew@cpan.org`
 
 # LICENSE
 

@@ -385,7 +385,7 @@ L<DBIx::Class::ResultSource> - Result source object
 
 =head1 AUTHOR
 
-Valters Skrupskis - C<valters.skrupskis@humanstate.com>
+malishew - C<malishew@cpan.org>
 
 =head1 LICENSE
 
