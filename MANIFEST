@@ -1,8 +1,9 @@
 Changes
 Makefile.PL
 MANIFEST
-README
-travis.yaml
+README.pod
+README.md
+.travis.yaml
 lib/DBIx/Result/Convert/JSONSchema.pm
 lib/DBIx/Result/Convert/JSONSchema/Default/MySQL.pm
 lib/DBIx/Result/Convert/JSONSchema/Type/MySQL.pm
