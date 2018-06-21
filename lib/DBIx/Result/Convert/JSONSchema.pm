@@ -112,7 +112,7 @@ has pattern_map => (
 );
 
 
-=head2 C<get_json_schema>
+=head2 get_json_schema
 
 Returns somewhat equivalent JSON schema based on DBIx result source name.
 
@@ -162,6 +162,8 @@ Returns somewhat equivalent JSON schema based on DBIx result source name.
                 ArrayRef of database column names which should always be INCLUDED in required schema properties
             exclude_properties:
                 ArrayRef of database column names which should be excluded from JSON schema
+            schema_overwrite:
+                HashRef of top level schema properties e.g. 'required', 'properties' etc. to overwrite
 
 =cut
 
@@ -181,11 +183,13 @@ sub get_json_schema {
     my %include_required                = map { $_ => 1 } @{ delete $args->{include_required}   || [] };
     my %exclude_properties              = map { $_ => 1 } @{ delete $args->{exclude_properties} || [] };
 
+    my $schema_overwrite                = delete $args->{schema_overwrite} // {};
+
     my %json_schema = (
-        type                  => 'object',
-        additional_properties => $allow_additional_properties,
-        required              => [],
-        properties            => {},
+        type                 => 'object',
+        additionalProperties => $allow_additional_properties,
+        required             => [],
+        properties           => {},
     );
 
     my $source_info = $self->_get_column_info($source);
@@ -279,7 +283,10 @@ sub get_json_schema {
         }
     }
 
-    return \%json_schema;
+    return {
+        %json_schema,
+        %{ $schema_overwrite },
+    };
 }
 
 # Return DBIx result source column info for the given result class name
