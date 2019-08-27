@@ -4,7 +4,8 @@ our $VERSION = '0.04';
 
 
 =head1 NAME
-    DBIx::Result::Convert::JSONSchema - Convert DBIx result schema to JSON schema
+
+DBIx::Result::Convert::JSONSchema - Convert DBIx result schema to JSON schema
 
 =begin html
 
